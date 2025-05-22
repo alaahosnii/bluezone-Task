@@ -9,10 +9,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,14 +29,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.bluzone.R
-import com.example.bluzone.data.models.Product
+import com.example.bluzone.data.local.entity.Product
+import com.example.bluzone.ui.screens.cart.CartViewModel
+import com.example.bluzone.ui.screens.productDetails.ProductDetailsViewModel
 
 @Composable
 fun ProductCardContent(
     product: Product,
+    quantityInCart: Int,
+    cartViewModel: CartViewModel,
     onFavoriteClick: () -> Unit,
-    onClick: () -> Unit
+    onBuyClick: () -> Unit,
+    fromCart: Boolean = false,
+    onCardClick: (String) -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -49,6 +60,10 @@ fun ProductCardContent(
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
+        onClick = {
+            onCardClick(product.id)
+        }
+
     ) {
         Column(
             modifier = Modifier
@@ -101,6 +116,19 @@ fun ProductCardContent(
                     ),
                 )
             }
+            if (fromCart)
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "الكمية : $quantityInCart",
+                        color = Color.Black,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .padding(top = 5.dp)
+                    )
+                }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -108,25 +136,60 @@ fun ProductCardContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Image(
-                    modifier = Modifier
-                        .height(25.dp)
-                        .padding(end = 6.dp),
-                    painter = painterResource(id = R.drawable.love_icon),
-                    contentDescription = null,
-                )
+                if (product.isFavorite){
+                    IconButton(
+                        onClick = {
+                            onFavoriteClick()
+                        },
+                        modifier = Modifier
+                            .height(25.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.favorite_filled),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .height(30.dp)
+                                .width(30.dp),
+                        )
+                    }
+                } else {
+                    IconButton(
+                        onClick = {
+                            onFavoriteClick()
+                        },
+                        modifier = Modifier
+                            .height(25.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.love_icon),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .height(30.dp)
+                                .width(30.dp),
+                        )
+                    }
+
+                }
                 Button(
                     modifier = Modifier
                         .weight(1f),
 //                        .height(40.dp),
-                    onClick = { onClick() },
+                    onClick = {
+                        if (!fromCart){
+                            onBuyClick()
+                        } else{
+                            cartViewModel.removeFromCart(
+                                product = product
+                            )
+                        }
+                              },
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFE7E00)
                     )
                 ) {
                     Text(
-                        text = "اشتر الآن",
+                        text = if (!fromCart) "اشتر الآن" else "إزالة من السلة",
                         color = Color.White,
                         fontSize = 15.sp,
                         textAlign = TextAlign.Center

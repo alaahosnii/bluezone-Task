@@ -2,6 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-kapt") // Add this line
+    id("com.google.dagger.hilt.android" )
+
 }
 
 android {
@@ -40,7 +43,17 @@ android {
 }
 
 dependencies {
+    val roomVersion = "2.6.1" // Use the latest stable version
 
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
+// Hilt
+    implementation("com.google.dagger:hilt-android:2.50")
+    kapt("com.google.dagger:hilt-compiler:2.50")
+
+// Hilt + Jetpack Compose integration
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

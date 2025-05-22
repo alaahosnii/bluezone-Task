@@ -1,7 +1,8 @@
 package com.example.bluzone.ui.screens.productDetails
 
+import android.content.Intent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,20 +11,26 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -31,16 +38,28 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.bluzone.R
-import com.example.bluzone.data.models.Product
+import com.example.bluzone.data.local.entity.Product
 import com.example.bluzone.ui.components.SliderDot.SliderDot
 import com.example.bluzone.ui.components.discountCard.DiscountCard
 import com.example.bluzone.ui.components.productCard.ProductCard
+import com.example.bluzone.ui.screens.cart.CartViewModel
 
 @Composable
 fun ProductTabContent(
     product: Product,
+    productsViewModel: ProductDetailsViewModel,
+    cartViewModel: CartViewModel,
+    onProductClick: (String) -> Unit,
 ) {
+    val context = LocalContext.current
+    val shareUrl = "https://bluzone.app/product/${product.id}"
+
+    val products by productsViewModel.products.collectAsState()
+    val isFavorite = products.any {
+        it.id == product.id && it.isFavorite
+    }
     val similarProducts = listOf<Product>(
         Product(
             id = "1",
@@ -150,21 +169,65 @@ fun ProductTabContent(
                         ),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-
                     Image(
                         painter = painterResource(id = R.drawable.share_icon),
                         contentDescription = null,
                         modifier = Modifier
+                            .clickable {
+                                val sendIntent = Intent().apply {
+                                    action = Intent.ACTION_SEND
+                                    putExtra(Intent.EXTRA_TEXT, "Check this out: $shareUrl")
+                                    type = "text/plain"
+                                }
+                                val shareIntent = Intent.createChooser(sendIntent, null)
+                                context.startActivity(shareIntent)
+                            }
                             .height(30.dp)
                             .width(30.dp),
                     )
-                    Image(
-                        painter = painterResource(id = R.drawable.love_icon),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .height(30.dp)
-                            .width(30.dp),
-                    )
+
+                    if (isFavorite){
+                        IconButton(
+                            onClick = {
+                                productsViewModel.toggleFavorite(
+                                    product = product
+                                )
+                            },
+                            modifier = Modifier
+                                .height(35.dp)
+                                .width(35.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Favorite,
+                                contentDescription = null,
+                                tint = Color.Black,
+                                modifier = Modifier
+                                    .height(30.dp)
+                                    .width(30.dp),
+                            )
+                        }
+                    } else {
+                        IconButton(
+                            onClick = {
+                                productsViewModel.toggleFavorite(
+                                    product = product
+                                )
+                            },
+                            modifier = Modifier
+                                .height(35.dp)
+                                .width(35.dp),
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.love_icon),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .height(30.dp)
+                                    .width(30.dp),
+                            )
+                        }
+
+                    }
+
                 }
                 SliderDot(
                     currentPage = 0,
@@ -425,7 +488,11 @@ fun ProductTabContent(
         items(similarProducts.size) { index ->
             ProductCard(
                 product = similarProducts[index],
-            )
+                cartViewModel = cartViewModel,
+                productsViewModel = productsViewModel,
+            ){
+                onProductClick(it)
+            }
         }
     }
 }

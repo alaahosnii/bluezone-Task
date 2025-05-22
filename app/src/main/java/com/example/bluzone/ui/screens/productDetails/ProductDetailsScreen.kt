@@ -3,6 +3,7 @@ package com.example.bluzone.ui.screens.productDetails
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,10 +17,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,30 +39,27 @@ import com.example.bluzone.R
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.example.bluzone.data.models.Product
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.bluzone.data.local.entity.Product
 import com.example.bluzone.ui.components.ProdcutTabs.ProductTabs
+import com.example.bluzone.ui.screens.cart.CartViewModel
+import com.example.bluzone.ui.screens.help.HelpScreen
+import com.example.bluzone.ui.screens.review.ReviewScreen
 
 @Composable
-fun ProductDetailsScreen() {
+fun ProductDetailsScreen(
+    productId: String,
+    productsViewModel: ProductDetailsViewModel,
+    cartViewModel: CartViewModel,
+    onCartClick: () -> Unit,
+    onProductClick: (String) -> Unit,
+) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val product = Product(
-        id = "1",
-        name = "جاكيت رجالي أنيق بقلنسوة\n" +
-                "مبطن بالفليس",
-        price = 25.0,
-        description = "جاكيت شتوي أنيق للرجال بغطاء قابل للفصل - دافئ، عملي ومتعدد الاستخدامات للأعمال أو الأنشطة الخارجية\n" +
-                "المادة: ألياف البوليستر (البوليستر)\n" +
-                "المكونات: 100% ألياف البوليستر (البوليستر)\n" +
-                "الطول: عادي\n" +
-                "طول الكم: كم طويل\n" +
-                "نوع الأكمام: أكمام راجلان",
-        beforeDiscount = 63.000,
-        discount = 60,
-        rating = 3,
-        brand = "عتيج",
-        sku = "6974321040059",
-        photo = R.drawable.product_img
-    )
+    val cartProducts by cartViewModel.cartProducts.collectAsState()
+    val product = productsViewModel.dummyProducts.find {
+        it.id == productId
+    }
     Column (
         modifier = Modifier
             .fillMaxSize()
@@ -135,15 +137,35 @@ fun ProductDetailsScreen() {
                         )
 
                     }
-                    Image(
-                        modifier = Modifier
-                            .height(30.dp)
-                            .width(30.dp),
-                        painter = painterResource(id = R.drawable.cart_icon),
 
-                        contentDescription = "Cart Icon",
-                    )
-
+                        BadgedBox(
+                            modifier = Modifier
+                                .clickable {
+                                    onCartClick()
+                                },
+                            badge = {
+                                if (cartProducts.isNotEmpty()) {
+                                    Badge(
+                                        containerColor = Color.Red,
+                                        contentColor = Color.White
+                                    ) {
+                                        Text(
+                                            "${cartProducts.size}",
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+                        ) {
+                            Image(
+                                modifier = Modifier
+                                    .height(30.dp)
+                                    .width(30.dp),
+                                painter = painterResource(id = R.drawable.cart_icon),
+                                contentDescription = "Cart Icon",
+                            )
+                        }
                 }
                 ProductTabs(
                     selectedTabIndex = selectedTabIndex,
@@ -154,8 +176,20 @@ fun ProductDetailsScreen() {
             }
 
         }
-        ProductTab(
-            product = product
-        )
+        when (selectedTabIndex) {
+            0 -> ProductTab(
+                product = product!!,
+                productsViewModel = productsViewModel,
+                cartViewModel = cartViewModel
+            ){
+                onProductClick(it)
+            }
+            1 -> ReviewScreen(
+                productId = productId
+            )
+            2 -> HelpScreen(
+                productId = productId
+            )
+        }
     }
 }

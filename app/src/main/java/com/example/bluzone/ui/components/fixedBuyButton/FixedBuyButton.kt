@@ -26,10 +26,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.bluzone.data.local.entity.Product
+import com.example.bluzone.ui.screens.cart.CartViewModel
+import com.example.bluzone.ui.screens.productDetails.ProductDetailsViewModel
 
 @Composable
 fun FixedBuyButton(
-    modifier: Modifier
+    modifier: Modifier,
+    product: Product,
+    cartViewModel: CartViewModel,
 ){
     var quantity by remember { mutableStateOf(1) }
     Row(
@@ -120,7 +126,12 @@ fun FixedBuyButton(
                         )
                         .weight(2.5f)
                         .fillMaxHeight(),
-                    onClick = {},
+                    onClick = {
+                        cartViewModel.addToCart(
+                            product = product,
+                            quantity = quantity
+                        )
+                    },
                     shape = RoundedCornerShape(6.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFE7E00)

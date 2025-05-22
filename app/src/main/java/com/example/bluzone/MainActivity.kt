@@ -20,7 +20,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.bluzone.ui.screens.productDetails.ProductDetailsScreen
 import com.example.bluzone.ui.navigation.NavGraph
 import com.example.bluzone.ui.theme.BluzoneTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
